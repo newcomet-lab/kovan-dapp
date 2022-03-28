@@ -263,12 +263,12 @@ function App() {
                 <TableCell>{tx.blockNumber}</TableCell>
                 <TableCell>{formatUTC(parseInt(tx.timeStamp))}</TableCell>
                 <TableCell>
-                  {blockchain.account === tx.from ? (
+                  {blockchain.account !== tx.from ? (
                     <Link href={`https://kovan.etherscan.io/address/${tx.from}`}>{tx.from}</Link>
                   ) : tx.from}
                 </TableCell>
                 <TableCell>
-                  {blockchain.account === tx.to ? (
+                  {blockchain.account !== tx.to ? (
                     <Link href={`https://kovan.etherscan.io/address/${tx.to}`}>{tx.to}</Link>
                   ) : tx.to}
                 </TableCell>
