@@ -1,4 +1,9 @@
 import { BigNumber } from 'ethers';
+import { format, addMinutes } from 'date-fns';
+
+export function formatUTC(timestamp) {
+    return `${format(addMinutes(timestamp * 1000, new Date(timestamp).getTimezoneOffset()), 'MM/dd/yyyy HH:mm:ss')} UTC`;
+}
 
 export const getNumberFromStrBN = (str_bn, dec) => {
     let val = 0;

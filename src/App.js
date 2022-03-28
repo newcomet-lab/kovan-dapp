@@ -2,9 +2,9 @@ import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { connect } from "./redux/blockchain/blockchainActions";
 import { fetchData } from "./redux/data/dataActions";
-import { TextField, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { TextField, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link } from '@mui/material';
 
-import { formatNumberFromBN, getBNFromNumber } from './utils/helper';
+import { formatNumberFromBN, getBNFromNumber, formatUTC } from './utils/helper';
 import { BigNumber } from 'ethers';
 
 function App() {
@@ -258,10 +258,10 @@ function App() {
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
                 <TableCell component="th" scope="row">
-                  {tx.hash.substr(0, 20)}...
+                  <Link href={`https://kovan.etherscan.io/tx/${tx.hash}`}>{tx.hash.substr(0, 20)}...</Link>
                 </TableCell>
                 <TableCell>{tx.blockNumber}</TableCell>
-                <TableCell>{tx.timeStamp}</TableCell>
+                <TableCell>{formatUTC(parseInt(tx.timeStamp))}</TableCell>
                 <TableCell>{tx.from}</TableCell>
                 <TableCell>{tx.to}</TableCell>
                 <TableCell>{formatNumberFromBN(tx.value, 18)}</TableCell>
