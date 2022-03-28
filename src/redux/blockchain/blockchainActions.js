@@ -41,6 +41,13 @@ export const connect = () => {
       },
     });
     const abi = await abiResponse.json();
+    const daiAbiResponse = await fetch("/config/dai-abi.json", {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+    const daiAbi = await daiAbiResponse.json();
     const configResponse = await fetch("/config/config.json", {
       headers: {
         "Content-Type": "application/json",
@@ -65,10 +72,17 @@ export const connect = () => {
             abi,
             CONFIG.CONTRACT_ADDRESS
           );
+          const DaiSmartContractObj = new Web3EthContract(
+            daiAbi,
+            CONFIG.DAI_CONTRACT_ADDRESS
+          );
           dispatch(
             connectSuccess({
               account: accounts[0],
-              smartContract: SmartContractObj,
+              cdaiSmartContract: SmartContractObj,
+              daiSmartContract: DaiSmartContractObj,
+              cdaiContractAddress: CONFIG.CONTRACT_ADDRESS,
+              daiContractAddress: CONFIG.DAI_CONTRACT_ADDRESS,
               web3: web3,
             })
           );

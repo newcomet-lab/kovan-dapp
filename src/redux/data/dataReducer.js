@@ -1,6 +1,10 @@
 const initialState = {
   loading: false,
-  totalSupply: 0,
+  cdaiTokenBalance: 0,
+  cdaiTokenDecimals: 0,
+  daiTokenBalance: 0,
+  daiTokenDecimals: 0,
+  daiTokenAllowance: 0,
   cost: 0,
   error: false,
   errorMsg: "",
@@ -19,8 +23,11 @@ const dataReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        totalSupply: action.payload.totalSupply,
-        // cost: action.payload.cost,
+        cdaiTokenBalance: action.payload.cdaiTokenBalance,
+        cdaiTokenDecimals: action.payload.cdaiTokenDecimals,
+        daiTokenBalance: action.payload.daiTokenBalance,
+        daiTokenDecimals: action.payload.daiTokenDecimals,
+        daiTokenAllowance: action.payload.daiTokenAllowance,
         error: false,
         errorMsg: "",
       };

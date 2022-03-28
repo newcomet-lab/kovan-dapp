@@ -21,23 +21,34 @@ const fetchDataFailed = (payload) => {
   };
 };
 
-export const fetchData = () => {
+export const fetchData = (account) => {
   return async (dispatch) => {
     dispatch(fetchDataRequest());
     try {
-      let totalSupply = await store
-        .getState()
-        .blockchain.smartContract.methods.totalSupply()
-        .call();
-      // let cost = await store
-      //   .getState()
-      //   .blockchain.smartContract.methods.cost()
-      //   .call();
+      const state = store.getState();
+
+      const cdaiTokenBalance = await state.blockchain.cdaiSmartContract.methods
+        .balanceOf(account).call();
+
+      const cdaiTokenDecimals = await state.blockchain.cdaiSmartContract.methods
+        .decimals().call();
+
+      const daiTokenBalance = await state.blockchain.daiSmartContract.methods
+        .balanceOf(account).call();
+
+      const daiTokenDecimals = await state.blockchain.daiSmartContract.methods
+        .decimals().call();
+
+      const daiTokenAllowance = await state.blockchain.daiSmartContract.methods
+        .allowance(account, state.blockchain.cdaiContractAddress).call();
 
       dispatch(
         fetchDataSuccess({
-          totalSupply,
-          // cost,
+          cdaiTokenBalance,
+          cdaiTokenDecimals,
+          daiTokenBalance,
+          daiTokenDecimals,
+          daiTokenAllowance
         })
       );
     } catch (err) {
