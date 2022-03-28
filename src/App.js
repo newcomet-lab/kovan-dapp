@@ -262,8 +262,16 @@ function App() {
                 </TableCell>
                 <TableCell>{tx.blockNumber}</TableCell>
                 <TableCell>{formatUTC(parseInt(tx.timeStamp))}</TableCell>
-                <TableCell>{tx.from}</TableCell>
-                <TableCell>{tx.to}</TableCell>
+                <TableCell>
+                  {blockchain.account === tx.from ? (
+                    <Link href={`https://kovan.etherscan.io/address/${tx.from}`}>{tx.from}</Link>
+                  ) : tx.from}
+                </TableCell>
+                <TableCell>
+                  {blockchain.account === tx.to ? (
+                    <Link href={`https://kovan.etherscan.io/address/${tx.to}`}>{tx.to}</Link>
+                  ) : tx.to}
+                </TableCell>
                 <TableCell>{formatNumberFromBN(tx.value, 18)}</TableCell>
                 <TableCell>{formatNumberFromBN(BigNumber.from(tx.gasPrice).mul(BigNumber.from(tx.gasUsed)), 18)}</TableCell>
               </TableRow>
