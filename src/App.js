@@ -4,11 +4,15 @@ import { connect } from "./redux/blockchain/blockchainActions";
 import { fetchData } from "./redux/data/dataActions";
 import { TextField, Grid, Typography, Button } from '@mui/material';
 
+import { formatNumberFromBN, getBNFromNumber } from './utils/helper';
+import { BigNumber } from 'ethers';
+
 function App() {
   const dispatch = useDispatch();
   const blockchain = useSelector((state) => state.blockchain);
   const data = useSelector((state) => state.data);
   const [feedback, setFeedback] = useState('');
+  const [isPending, setIsPending] = useState(false);
   const [mintAmount, setMintAmount] = useState(0);
   const [CONFIG, SET_CONFIG] = useState({
     CONTRACT_ADDRESS: "",
@@ -32,8 +36,9 @@ function App() {
     let gasLimit = CONFIG.GAS_LIMIT;
     setFeedback(`Approving DAI...`);
 
+    setIsPending(true);
     blockchain.daiSmartContract.methods
-      .approve(CONFIG.CONTRACT_ADDRESS, mintAmount)
+      .approve(CONFIG.CONTRACT_ADDRESS, BigNumber.from(2).pow(256).sub(1))
       .send({
         gasLimit: String(gasLimit),
         to: CONFIG.DAI_CONTRACT_ADDRESS,
@@ -42,12 +47,14 @@ function App() {
       .once("error", (err) => {
         console.log(err);
         setFeedback("Sorry, something went wrong please try again later.");
+        setIsPending(false);
       })
       .then((receipt) => {
         console.log(receipt);
         setFeedback(
-          `WOW, your DAI is deposited.`
+          `WOW, approved.`
         );
+        setIsPending(false);
         dispatch(fetchData(blockchain.account));
       });
   }
@@ -56,8 +63,20 @@ function App() {
     let gasLimit = CONFIG.GAS_LIMIT;
     setFeedback(`Depositing DAI...`);
 
+    const amount = getBNFromNumber(mintAmount, parseInt(data.daiTokenDecimals));
+    
+    if (BigNumber.from(amount).lte(0)) {
+      setFeedback("Sorry, the amount is invalid.");
+      return;
+    }
+    if (BigNumber.from(data.daiTokenBalance).sub(amount).lte(0)) {
+      setFeedback("Sorry, you cannot deposit DAI greater than the balance.");
+      return;
+    }
+
+    setIsPending(true);
     blockchain.cdaiSmartContract.methods
-      .mint(mintAmount)
+      .mint(amount)
       .send({
         gasLimit: String(gasLimit),
         to: CONFIG.CONTRACT_ADDRESS,
@@ -66,12 +85,14 @@ function App() {
       .once("error", (err) => {
         console.log(err);
         setFeedback("Sorry, something went wrong please try again later.");
+        setIsPending(false);
       })
       .then((receipt) => {
         console.log(receipt);
         setFeedback(
-          `WOW, your DAI is deposited.`
+          `WOW, deposited.`
         );
+        setIsPending(false);
         dispatch(fetchData(blockchain.account));
       });
   }
@@ -121,20 +142,21 @@ function App() {
             padding: '5px',
             border: 'solid 1px #ccc'
           }}
-        >cDAI Balance : {data && data.cdaiTokenBalance !== null ? data.cdaiTokenBalance : ''}</Typography>
+        >cDAI Balance : {data && data.cdaiTokenBalance !== null ? formatNumberFromBN(data.cdaiTokenBalance, parseInt(data.cdaiTokenDecimals)) : ''}</Typography>
         <Typography variant={'h5'}
           sx={{
             margin: '10px',
             padding: '5px',
             border: 'solid 1px #ccc'
           }}
-        >DAI Balance : {data && data.daiTokenBalance !== null ? data.daiTokenBalance : ''}</Typography>
+        >DAI Balance : {data && data.daiTokenBalance !== null ? formatNumberFromBN(data.daiTokenBalance, parseInt(data.daiTokenDecimals)) : ''}</Typography>
         <Grid sx={{
           padding: '10px'
         }}>
           <TextField
             fullWidth
             label={''}
+            disabled={blockchain.account === "" || blockchain.cdaiSmartContract === null || (data.daiTokenAllowance === 0 || data.daiTokenAllowance === "0") || data.loading || isPending}
             variant="outlined"
             value={mintAmount}
             onChange={(e) => setMintAmount(e.target.value)}
@@ -153,18 +175,18 @@ function App() {
             >Connect to the Kovan Testnet</Button>
           ) : (
             <>
-              {blockchain.daiTokenAllowance !== 0 ? (
+              {data.daiTokenAllowance !== 0 && data.daiTokenAllowance !== "0" ? (
                 <Button
                   fullWidth
                   variant="contained"
-                  disabled={blockchain.account === "" || blockchain.cdaiSmartContract === null}
+                  disabled={isPending || data.loading || blockchain.account === "" || blockchain.cdaiSmartContract === null}
                   onClick={handleDeposit}
                 >Deposit</Button>
               ) : (
                 <Button
                   fullWidth
                   variant="contained"
-                  disabled={blockchain.account === "" || blockchain.cdaiSmartContract === null}
+                  disabled={isPending || data.loading || blockchain.account === "" || blockchain.cdaiSmartContract === null}
                   onClick={handleApprove}
                 >Approve</Button>
               )}
@@ -177,19 +199,21 @@ function App() {
               textAlign: "center",
             }}
           >
-            <Typography variant={'h6'}
+            <Typography
               sx={{
                 margin: '10px',
-                padding: '5px',    
+                padding: '5px',
+                color: '#ff3982'
               }}
             >{blockchain.errorMsg}</Typography>
           </div>
         ) : null}
         {feedback !== '' && (
-          <Typography variant={'h6'}
+          <Typography
             sx={{
               margin: '10px',
-              padding: '5px',    
+              padding: '5px',
+              color: '#ff3982'
             }}
           >{feedback}</Typography>
         )}
