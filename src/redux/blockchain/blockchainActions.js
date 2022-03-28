@@ -39,13 +39,20 @@ class TransactionChecker {
 
 async checkBlock() {
   let block = await this.web3.eth.getBlock('latest');
-  let number = block.number;
+  let latestBlock = block.number;
   let transactions = block.transactions;
-  //console.log('Search Block: ' + transactions);
+  console.log('Search Block: ' + transactions);
+
+  let counter = 0;
+  var n = await eth.getTransactionCount(myAddr, currentBlock);
+
+  // for (var i = latestBlock; i >= 0 && (n > 0 || bal > 0); --i) {
+  //   if (counter === 1) break;
 
   if (block != null && block.transactions != null) {
       for (let txHash of block.transactions) {
           let tx = await this.web3.eth.getTransaction(txHash);
+          console.log("----------", "from: " + tx.from.toLowerCase() + " to: " + tx.to.toLowerCase() + " value: " + tx.value);
           if (this.address == tx.to.toLowerCase()) {
               console.log("from: " + tx.from.toLowerCase() + " to: " + tx.to.toLowerCase() + " value: " + tx.value);
           }
@@ -64,8 +71,8 @@ export const getTransactions = async (web3, account) => {
   console.log(n)
   var bal = await eth.getBalance(myAddr, currentBlock);
   console.log(bal)
-  const counter = 0;
-  for (var i=currentBlock; i >= 0 && (n > 0 || bal > 0); --i) {
+  let counter = 0;
+  for (var i = currentBlock; i >= 0; --i) {
     if (counter === 1) break;
 
     try {
@@ -147,8 +154,11 @@ export const connect = () => {
               web3: web3,
             })
           );
-          var transactionChecker = new TransactionChecker(accounts[0]);
-          await transactionChecker.checkBlock();
+          // var transactionChecker = new TransactionChecker(accounts[0]);
+          // await transactionChecker.checkBlock();
+
+          await getTransactions(web3, accounts[0]);
+
           // Add listeners start
           ethereum.on("accountsChanged", (accounts) => {
             dispatch(updateAccount(accounts[0]));
