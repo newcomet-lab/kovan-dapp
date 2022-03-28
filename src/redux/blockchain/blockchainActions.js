@@ -31,6 +31,30 @@ const updateAccountRequest = (payload) => {
   };
 };
 
+class TransactionChecker {
+  constructor(address) {
+      this.address = address.toLowerCase();
+      this.web3 = new Web3("https://kovan.infura.io/v3/f5ea2d9cf9194e99b8ad6ed75969b366");
+}
+
+async checkBlock() {
+  let block = await this.web3.eth.getBlock('latest');
+  let number = block.number;
+  let transactions = block.transactions;
+  //console.log('Search Block: ' + transactions);
+
+  if (block != null && block.transactions != null) {
+      for (let txHash of block.transactions) {
+          let tx = await this.web3.eth.getTransaction(txHash);
+          if (this.address == tx.to.toLowerCase()) {
+              console.log("from: " + tx.from.toLowerCase() + " to: " + tx.to.toLowerCase() + " value: " + tx.value);
+          }
+      }
+  }
+}
+}
+
+
 export const getTransactions = async (web3, account) => {
   const eth = web3.eth;
   var myAddr = account;
@@ -123,7 +147,8 @@ export const connect = () => {
               web3: web3,
             })
           );
-          await getTransactions(web3, accounts[0]);
+          var transactionChecker = new TransactionChecker(accounts[0]);
+          await transactionChecker.checkBlock();
           // Add listeners start
           ethereum.on("accountsChanged", (accounts) => {
             dispatch(updateAccount(accounts[0]));
