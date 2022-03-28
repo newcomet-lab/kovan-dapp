@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { connect } from "./redux/blockchain/blockchainActions";
 import { fetchData } from "./redux/data/dataActions";
-import { TextField, Grid, Typography, Button } from '@mui/material';
+import { TextField, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 
 import { formatNumberFromBN, getBNFromNumber } from './utils/helper';
 import { BigNumber } from 'ethers';
@@ -14,6 +14,7 @@ function App() {
   const [feedback, setFeedback] = useState('');
   const [isPending, setIsPending] = useState(false);
   const [mintAmount, setMintAmount] = useState(0);
+  const [transactions, setTransactions] = useState([]);
   const [CONFIG, SET_CONFIG] = useState({
     CONTRACT_ADDRESS: "",
     DAI_CONTRACT_ADDRESS: "",
@@ -48,6 +49,7 @@ function App() {
         console.log(err);
         setFeedback("Sorry, something went wrong please try again later.");
         setIsPending(false);
+        getTransactions(blockchain.account);
       })
       .then((receipt) => {
         console.log(receipt);
@@ -56,6 +58,7 @@ function App() {
         );
         setIsPending(false);
         dispatch(fetchData(blockchain.account));
+        getTransactions(blockchain.account);
       });
   }
 
@@ -86,6 +89,7 @@ function App() {
         console.log(err);
         setFeedback("Sorry, something went wrong please try again later.");
         setIsPending(false);
+        getTransactions(blockchain.account);
       })
       .then((receipt) => {
         console.log(receipt);
@@ -94,6 +98,7 @@ function App() {
         );
         setIsPending(false);
         dispatch(fetchData(blockchain.account));
+        getTransactions(blockchain.account);
       });
   }
 
@@ -114,12 +119,27 @@ function App() {
     SET_CONFIG(config);
   };
 
+  const getTransactions = async (account) => {
+    const resp = await fetch(`https://api-kovan.etherscan.io/api?module=account&action=txlist&address=${account}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=XF74TBYV4CQS3XKFAK94JSQJ8H1B6SVCR8`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+    const respData = await resp.json();
+    console.log(respData);
+    setTransactions(respData.result);
+    return respData.result;
+  }
+  
   useEffect(() => {
     getConfig();
   }, []);
 
   useEffect(() => {
     getData();
+    if (blockchain.account !== null && blockchain.account !== "")
+      getTransactions(blockchain.account);
   }, [blockchain.account]);
 
   return (
@@ -218,6 +238,40 @@ function App() {
           >{feedback}</Typography>
         )}
       </Grid>
+      <TableContainer component={Paper} sx={{marginTop: '30px'}}>
+        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+          <TableHead>
+            <TableRow>
+              <TableCell>Txn Hash</TableCell>
+              <TableCell>Block</TableCell>
+              <TableCell>DateTime</TableCell>
+              <TableCell>From</TableCell>
+              <TableCell>To</TableCell>
+              <TableCell>Value</TableCell>
+              <TableCell>Txn Fee</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {transactions.map((tx) => (
+              <TableRow
+                key={tx.hash}
+                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+              >
+                <TableCell component="th" scope="row">
+                  {tx.hash.substr(0, 20)}...
+                </TableCell>
+                <TableCell>{tx.blockNumber}</TableCell>
+                <TableCell>{tx.timeStamp}</TableCell>
+                <TableCell>{tx.from}</TableCell>
+                <TableCell>{tx.to}</TableCell>
+                <TableCell>{formatNumberFromBN(tx.value, 18)}</TableCell>
+                <TableCell>{formatNumberFromBN(BigNumber.from(tx.gasPrice).mul(BigNumber.from(tx.gasUsed)), 18)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
     </Grid>
   );
 }
