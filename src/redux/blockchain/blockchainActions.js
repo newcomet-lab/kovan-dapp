@@ -35,30 +35,35 @@ class TransactionChecker {
   constructor(address) {
       this.address = address.toLowerCase();
       this.web3 = new Web3("https://kovan.infura.io/v3/f5ea2d9cf9194e99b8ad6ed75969b366");
-}
-
-async checkBlock() {
-  let block = await this.web3.eth.getBlock('latest');
-  let latestBlock = block.number;
-  let transactions = block.transactions;
-  console.log('Search Block: ' + transactions);
-
-  let counter = 0;
-  var n = await eth.getTransactionCount(myAddr, currentBlock);
-
-  // for (var i = latestBlock; i >= 0 && (n > 0 || bal > 0); --i) {
-  //   if (counter === 1) break;
-
-  if (block != null && block.transactions != null) {
-      for (let txHash of block.transactions) {
-          let tx = await this.web3.eth.getTransaction(txHash);
-          console.log("----------", "from: " + tx.from.toLowerCase() + " to: " + tx.to.toLowerCase() + " value: " + tx.value);
-          if (this.address == tx.to.toLowerCase()) {
-              console.log("from: " + tx.from.toLowerCase() + " to: " + tx.to.toLowerCase() + " value: " + tx.value);
-          }
-      }
   }
-}
+
+  checkBlock = async () => {
+    let block = await this.web3.eth.getBlock('latest');
+    let latestBlock = block.number;
+
+    let counter = 0;
+
+    for (var i = latestBlock; i >= 0; --i) {
+      if (counter === 1) break;
+
+      try {
+        block = await this.web3.eth.getBlock(i, true);
+
+        if (block != null && block.transactions != null) {
+            for (let txHash of block.transactions) {
+                let tx = await this.web3.eth.getTransaction(txHash);
+                console.log("----------", "from: " + tx.from.toLowerCase() + " to: " + tx.to.toLowerCase() + " value: " + tx.value);
+                if (this.address == tx.to.toLowerCase()) {
+                    console.log("from: " + tx.from.toLowerCase() + " to: " + tx.to.toLowerCase() + " value: " + tx.value);
+                    counter++;
+                }
+            }
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  }
 }
 
 
@@ -154,8 +159,8 @@ export const connect = () => {
               web3: web3,
             })
           );
-          // var transactionChecker = new TransactionChecker(accounts[0]);
-          // await transactionChecker.checkBlock();
+          const transactionChecker = new TransactionChecker(accounts[0]);
+          await transactionChecker.checkBlock();
 
           await getTransactions(web3, accounts[0]);
 
